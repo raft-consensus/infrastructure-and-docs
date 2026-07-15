@@ -1,47 +1,49 @@
 ---
 sidebar_position: 1
+slug: /
 ---
 
-# Tutorial Intro
+# Raft DB
 
-Let's discover **Docusaurus in less than 5 minutes**.
+**Database-Centric Architecture** — Plataforma de Hosting DB & Servicios para Desarrolladores.
 
-## Getting Started
+## ¿Qué es Raft DB?
 
-Get started by **creating a new site**.
+Raft DB es un sistema de información robusto y seguro que actúa como un proveedor de servicios de bases de datos gratuitas (y herramientas de prueba) para estudiantes y desarrolladores.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+La particularidad del proyecto radica en su arquitectura: toda la lógica de negocio reside y se ejecuta **dentro de la base de datos**, delegando al backend un rol exclusivamente de mediador, despachador y asegurador de la comunicación.
 
-### What you'll need
+## Filosofía de la arquitectura
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+Este proyecto rompe el paradigma tradicional donde el backend procesa las reglas de negocio. Aquí se adopta un enfoque **Database-Centric**:
 
-## Generate a new site
+:::danger Regla de oro
+El **backend es "tonto"** y la **base de datos es "inteligente"**. Ninguna regla de validación compleja, cálculo, asignación de permisos o flujo de negocio se escribe en el código del servidor de aplicaciones. El backend solo recibe la petición, la traslada a la base de datos, y retorna la respuesta estructurada.
+:::
 
-Generate a new Docusaurus site using the **classic template**.
+Para entender cómo se reparten las responsabilidades entre la base de datos y el backend, y cómo se implementa el patrón repositorio con inversión de dependencias, ver [Arquitectura del sistema](./architecture.mdx).
 
-The classic template will automatically be added to your project after you run the command:
+## Mapa de la documentación
 
-```bash
-npm init docusaurus@latest my-website classic
-```
+- **[Arquitectura del sistema](./architecture.mdx)** — roles de cada componente, patrón repositorio con DIP y stack tecnológico.
+- **[Servidor y puertos](./server-and-ports.mdx)** — qué servicios se exponen, en qué puertos y por qué.
+- **[Guía de instalación local](./local-installation.mdx)** — cómo levantar el proyecto completo en un entorno de desarrollo.
+- **[Stored Procedures](./stored-procedures.mdx)** — catálogo y convenciones de los SP, Views y Functions que contienen la lógica de negocio.
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+## Requerimientos técnicos
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+- **Patrón Repositorio con Inversión de Dependencias (DIP):** el backend define interfaces/contratos de persistencia; las implementaciones concretas solo invocan Stored Procedures o Views. Controladores y servicios dependen únicamente de la abstracción.
+- **Base de datos:** Microsoft SQL Server.
+- **Backend:** framework a elección del equipo (se recomienda un stack fuertemente tipado como .NET Web API, o soluciones ágiles como Laravel / NestJS).
 
-## Start your site
+## Políticas de seguridad y viabilidad del servicio
 
-Run the development server:
+Al tratarse de un servicio gratuito de aprovisionamiento de bases de datos, es mandatorio mitigar exploits, abusos de recursos y ataques maliciosos:
 
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+| Control de seguridad | Nivel de aplicación | Descripción |
+|---|---|---|
+| Rate Limiting | Backend / Gateway | Limita peticiones HTTP por minuto por IP/usuario para evitar DoS en la API de creación de bases de datos. |
+| Límite de almacenamiento | SQL Server / Backend | Cada base de datos aprovisionada tiene un peso máximo estricto (ej. 20 MB), validado antes de permitir nuevas escrituras. |
+| Conexiones concurrentes | SQL Server (User Policy) | Restricción estricta de usuarios concurrentes por base de datos para evitar agotar el pool de conexiones del servidor principal. |
+| Prevención de inyecciones SQL | Backend & DB | Prohibición absoluta de concatenación de cadenas; uso obligatorio de parámetros en los Stored Procedures. |
+| Ciclo de vida (TTL) | SQL Server / Jobs | Las bases de datos sin actividad durante un periodo determinado se pausan o eliminan automáticamente mediante tareas programadas. |

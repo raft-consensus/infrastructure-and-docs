@@ -1,0 +1,32 @@
+---
+sidebar_position: 3
+---
+
+# Servidor y puertos
+
+Esta página documenta los servicios que componen el entorno de Raft DB, los puertos que exponen y la razón de cada uno. **Es un contenido vivo**: debe actualizarse en cuanto el equipo confirme el framework de backend y la topología final de despliegue.
+
+:::info Estado actual
+El framework de backend todavía está por definir (ver [Arquitectura del sistema](./architecture.mdx)). Los puertos indicados abajo son los valores por defecto/convencionales de cada tecnología candidata; ajustar esta tabla en cuanto se tome la decisión.
+:::
+
+## Servicios y puertos
+
+| Servicio | Puerto | Protocolo | Por qué está abierto |
+|---|---|---|---|
+| SQL Server (motor principal) | `1433` | TCP | Puerto estándar de SQL Server. Es el único punto de entrada a la capa de datos; solo el backend (y herramientas administrativas autorizadas) deben poder alcanzarlo. **No debe exponerse públicamente a internet.** |
+| API Backend | `5000` (.NET) / `3000` (NestJS) / `8000` (Laravel) | HTTP/HTTPS | Expone los endpoints REST que consumen los clientes. Es el único componente con salida pública; aplica autenticación, autorización y Rate Limiting antes de tocar la base de datos. |
+| Sitio de documentación (Docusaurus) | `3000` (dev) | HTTP | Servidor de desarrollo local de esta documentación (`npm run start`). No se usa en producción; en producción se sirve como sitio estático. |
+| Bases de datos aprovisionadas (por estudiante) | Rango dinámico / instancia lógica en el mismo motor SQL Server | TCP | Cada "base de datos gratuita" entregada a un estudiante vive como base de datos lógica dentro del mismo motor SQL Server (no como un servidor/puerto nuevo), para poder controlar límites de almacenamiento, conexiones concurrentes y TTL de forma centralizada. |
+
+## Principios de exposición de puertos
+
+- **Superficie mínima**: solo el puerto de la API backend debe estar accesible desde fuera de la red interna/VPC. SQL Server permanece en una red privada, alcanzable únicamente por el backend.
+- **Sin acceso directo estudiante → base de datos**: los estudiantes nunca reciben credenciales de conexión directa al motor; todo pasa por la API, que aplica Rate Limiting y validaciones antes de tocar la base de datos.
+- **Puertos administrativos** (SSH, RDP, herramientas de administración de SQL Server) solo deben estar disponibles vía acceso restringido (VPN / bastion host), nunca abiertos a internet.
+
+## Pendiente de completar
+
+- [ ] Confirmar puerto real de la API una vez elegido el framework de backend.
+- [ ] Documentar el mecanismo exacto de aislamiento por estudiante (¿base de datos lógica separada? ¿schema separado? ¿login con permisos acotados?).
+- [ ] Añadir diagrama de red/infraestructura de despliegue (firewall, VPC, balanceador) cuando exista.

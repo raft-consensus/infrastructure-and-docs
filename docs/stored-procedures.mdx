@@ -1,0 +1,63 @@
+---
+sidebar_position: 5
+---
+
+# Stored Procedures
+
+Dado el enfoque **Database-Centric** de Raft DB (ver [Arquitectura del sistema](./architecture.mdx)), todos los Stored Procedures (SPs), Views y Functions documentados aquí son los que contienen la lógica de negocio real del sistema. El backend nunca reimplementa esta lógica: solo la invoca.
+
+:::info Estado actual
+Todavía no se han implementado SPs, Views ni Functions concretos. Esta página define la **convención de documentación** que debe seguirse a partir del primer SP que se escriba, y sirve como plantilla a completar.
+:::
+
+## Convención de nombres
+
+| Objeto | Prefijo | Ejemplo |
+|---|---|---|
+| Stored Procedure | `sp_` | `sp_CreateDatabaseInstance` |
+| View | `vw_` | `vw_UserDatabaseUsage` |
+| Function (escalar o tabla) | `fn_` | `fn_CalculateStorageUsedMB` |
+
+## Plantilla para documentar un Stored Procedure
+
+Cada SP debe documentarse con esta estructura antes de considerarse listo para usar desde el backend:
+
+### `sp_NombreDelProcedimiento`
+
+- **Propósito:** qué regla de negocio resuelve (una frase).
+- **Se invoca desde:** qué endpoint/repositorio del backend lo llama.
+- **Parámetros de entrada:**
+
+  | Parámetro | Tipo | Obligatorio | Descripción |
+  |---|---|---|---|
+  | `@Parametro1` | `NVARCHAR(100)` | Sí | ... |
+
+- **Valor(es) de retorno / result set:** columnas devueltas o código de retorno.
+- **Validaciones/reglas de negocio que aplica:** (ej. límite de 20 MB, TTL, conexiones concurrentes).
+- **Manejo de errores:** códigos o mensajes que puede lanzar (`THROW`/`RAISERROR`) y cómo debe interpretarlos el backend.
+- **Ejemplo de invocación:**
+
+  ```sql
+  EXEC sp_NombreDelProcedimiento
+       @Parametro1 = N'valor';
+  ```
+
+## Reglas obligatorias para todo SP, View o Function
+
+- **Prohibición absoluta de concatenación de cadenas** para construir consultas dinámicas.
+- **Uso obligatorio de parámetros tipados** (`sp_executesql` con parámetros si se requiere SQL dinámico, nunca concatenación directa) — ver la política de prevención de inyecciones SQL en la [introducción](./intro.mdx).
+- Todo SP de escritura debe validar explícitamente, antes de ejecutar la operación:
+  - Límite de almacenamiento de la base de datos aprovisionada (ver [Servidor y puertos](./server-and-ports.mdx)).
+  - Límite de conexiones concurrentes del usuario/base de datos.
+- La lógica de expiración (TTL) debe implementarse vía Jobs programados en SQL Server, no en el backend.
+
+## Catálogo de Stored Procedures
+
+| Nombre | Propósito | Estado |
+|---|---|---|
+| `sp_CreateDatabaseInstance` | Aprovisiona una nueva base de datos gratuita para un estudiante | Pendiente de implementar |
+| `sp_ValidateStorageLimit` | Valida que una base de datos no supere el límite de almacenamiento antes de una escritura | Pendiente de implementar |
+| `sp_EnforceConnectionLimit` | Aplica el límite de conexiones concurrentes por base de datos | Pendiente de implementar |
+| `sp_ExpireInactiveDatabases` (Job) | Pausa o elimina bases de datos sin actividad reciente (TTL) | Pendiente de implementar |
+
+> Esta tabla debe actualizarse cada vez que se añada, renombre o elimine un SP, View o Function.

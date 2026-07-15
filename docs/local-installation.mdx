@@ -1,0 +1,74 @@
+---
+sidebar_position: 4
+---
+
+# Guía de instalación local
+
+Pasos para que un nuevo desarrollador levante el entorno completo de Raft DB en su máquina.
+
+:::info Estado actual
+El repositorio del backend todavía no está creado / el framework no está definido. Esta guía documenta lo que ya existe (la base de datos y este sitio de documentación) y deja marcado lo que falta por completar en cuanto se elija el stack de backend.
+:::
+
+## Requisitos previos
+
+- [Docker](https://www.docker.com/) y Docker Compose (para levantar SQL Server localmente sin instalarlo en el sistema).
+- [Node.js](https://nodejs.org/) 20 o superior (para correr este sitio de documentación).
+- Un cliente de SQL (Azure Data Studio, SSMS o `sqlcmd`) para inspeccionar la base de datos y ejecutar scripts de SPs/Views/Functions.
+- Git.
+
+## 1. Clonar el repositorio
+
+```bash
+git clone <url-del-repositorio>
+cd documentacion-raft
+```
+
+## 2. Levantar SQL Server localmente
+
+Se recomienda usar la imagen oficial de SQL Server en Docker para no depender de una instalación local:
+
+```bash
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=<TuPasswordSegura123!>" \
+  -p 1433:1433 --name raftdb-sqlserver \
+  -d mcr.microsoft.com/mssql/server:2022-latest
+```
+
+Ver [Servidor y puertos](./server-and-ports.mdx) para entender por qué se expone el puerto `1433` y qué restricciones aplican.
+
+## 3. Ejecutar los scripts de base de datos
+
+Una vez definido el catálogo de Stored Procedures, Views y Functions (ver [Stored Procedures](./stored-procedures.mdx)), estos deben ejecutarse contra la instancia local para dejarla en el mismo estado que espera el backend.
+
+```bash
+sqlcmd -S localhost -U sa -P "<TuPasswordSegura123!>" -i ./db/scripts/00-schema.sql
+sqlcmd -S localhost -U sa -P "<TuPasswordSegura123!>" -i ./db/scripts/01-stored-procedures.sql
+```
+
+> Los nombres de carpeta/scripts anteriores son un ejemplo; ajustar cuando exista la carpeta real de scripts SQL del proyecto.
+
+## 4. Levantar el backend
+
+Pendiente hasta que el equipo confirme el framework (.NET Web API, NestJS o Laravel — ver [Arquitectura del sistema](./architecture.mdx)). Cuando exista, esta sección debe documentar como mínimo:
+
+- Cómo configurar la cadena de conexión hacia el SQL Server local.
+- Cómo instalar dependencias y correr el servidor en modo desarrollo.
+- Qué variables de entorno son obligatorias (cadena de conexión, secretos de autenticación, límites de Rate Limiting).
+
+## 5. Levantar este sitio de documentación
+
+```bash
+npm install
+npm run start
+```
+
+Abre `http://localhost:3000` para ver la documentación en modo desarrollo con recarga automática.
+
+## Verificación
+
+Antes de dar por buena la instalación local, confirmar que:
+
+- [ ] SQL Server responde en `localhost:1433` y se puede conectar con el cliente SQL elegido.
+- [ ] Los Stored Procedures, Views y Functions base están creados en la instancia local.
+- [ ] El backend levanta sin errores y logra conectarse a SQL Server.
+- [ ] Este sitio de documentación corre en `localhost:3000`.

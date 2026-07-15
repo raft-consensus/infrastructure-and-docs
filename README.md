@@ -1,22 +1,30 @@
-# Website
+# Raft DB Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Sitio de documentación de **Raft DB**, una plataforma de hosting de bases de datos y servicios para desarrolladores basada en una arquitectura **Database-Centric** (toda la lógica de negocio vive en SQL Server; el backend es solo un mediador).
 
-## Installation
+Construido con [Docusaurus](https://docusaurus.io/).
+
+## Contenido
+
+- `docs/intro.mdx` — presentación del proyecto, filosofía y políticas de seguridad.
+- `docs/architecture.mdx` — arquitectura del sistema y patrón Repositorio + DIP.
+- `docs/server-and-ports.mdx` — servicios expuestos, puertos y por qué.
+- `docs/local-installation.mdx` — guía de instalación local para nuevos desarrolladores.
+- `docs/stored-procedures.mdx` — convenciones y catálogo de Stored Procedures, Views y Functions.
+
+## Instalación
 
 ```bash
 npm install
 ```
 
-**Note**: feel free to use the package manager of your choice.
-
-## Local Development
+## Desarrollo local
 
 ```bash
 npm run start
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+Levanta un servidor local en `http://localhost:3000` con recarga automática.
 
 ## Build
 
@@ -24,20 +32,4 @@ This command starts a local development server and opens up a browser window. Mo
 npm run build
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
-
-## Deployment
-
-Using SSH:
-
-```bash
-USE_SSH=true npm run deploy
-```
-
-Not using SSH:
-
-```bash
-GIT_USER=<Your GitHub username> npm run deploy
-```
-
-If you are using GitHub Pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+Genera el sitio estático en el directorio `build`, listo para desplegarse en cualquier hosting estático.
